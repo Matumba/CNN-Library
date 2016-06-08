@@ -279,3 +279,17 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# training data folder
+data/**
+/include/cnn.hpp
+/src/main.cpp
+/vc14/_50
+/vc14/_40
+/vc14/_39
+/vc14/_30
+/vc14/_20
+/vc14/_10
+/vc14/weights.dat
+/vc14/CNN_Test.vcxproj.filters
+/vc14/CNN_Test.vcxproj
