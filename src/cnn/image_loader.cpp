@@ -80,7 +80,7 @@ namespace cnn
 		std::string image_path = imagesPath[number].path().string();
 		cv::Mat image = cv::imread(image_path, CV_LOAD_IMAGE_COLOR);
 		// my region of interest
-		cv::Rect ROI(70, 60, 140, 140);
+		cv::Rect ROI(70, 78, 125, 94);
 		// Note that this doesn't copy the data
 		cv::Mat croppedImage = image(ROI);
 		cv::Mat scaleImage;

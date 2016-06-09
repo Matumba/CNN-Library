@@ -212,8 +212,7 @@ namespace cnn
 								for (uword row = 0; row < weigths.n_rows; ++row) {
 									local_learning_rate = learning_rate_
 											/ (new_hessian[n].first.data[item](row, col, slice) + mu_);
-									weigths.data[item](row, col, slice) += local_learning_rate *
-											1 / (new_hessian[n].first.data[item](row, col, slice) + mu_)
+									weigths.data[item](row, col, slice) += local_learning_rate 
 											* gradient[n].first.data[item](row, col, slice);
 								}
 							}
@@ -226,8 +225,7 @@ namespace cnn
 								for (uword row = 0; row < bias_weigths.n_rows; ++row) {
 									local_learning_rate = learning_rate_
 											/ (new_hessian[n].second.data[item](row, col, slice) + mu_);
-									bias_weigths.data[item](row, col, slice) += local_learning_rate *
-											1 / (new_hessian[n].second.data[item](row, col, slice) + mu_)
+									bias_weigths.data[item](row, col, slice) += local_learning_rate 
 											* gradient[n].second.data[item](row, col, slice);
 								}
 							}

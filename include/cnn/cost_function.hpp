@@ -30,6 +30,13 @@ namespace cnn
 			// virtual float Derivative_2nd(float label, float hypothesis) const noexcept = 0;
 		};
 
+		class Loglikelihood : public BaseCostFunction
+		{
+		public:
+			float Compute(const arma::Col<float>& labels,
+						  const arma::Col<float>& hypothesis) const noexcept override;
+			float Derivative(float label, float hypothesis) const noexcept override;
+		};
 
 		class EuclidianLoss : public BaseCostFunction
 		{

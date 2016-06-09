@@ -19,8 +19,7 @@ namespace cnn
 {
 	namespace nn
 	{
-
-		void BasePoolingLayer::Forward(std::shared_ptr<arma::Cube<float>> input)
+		void MaxPoolingLayer::Forward(std::shared_ptr<arma::Cube<float>> input)
 		{
 			using namespace arma;
 
@@ -36,18 +35,33 @@ namespace cnn
 #endif
 			output_height = output_height / stride_ + 1;
 			output_width = output_width / stride_ + 1;
-
 			if (!receptiveField_) {
 				receptiveField_ = std::make_shared<Cube<float>>(output_height, output_width,
-																input_->n_slices, fill::zeros);
-			} // convolution and pooling layer don't have fixed data for input signals
-			  // so we need always resize our receptive field 
-			else {
+				                                                input_->n_slices, fill::zeros);
+			} else {
 				receptiveField_->set_size(output_height, output_width, input_->n_slices);
 				receptiveField_->fill(0.0);
 			}
 
-			SubSample(output_height, output_width);
+			connectIndexes_.set_size(input_->n_rows, input_->n_cols, input_->n_slices);
+			connectIndexes_.fill(0.0);
+			double maxVal;
+			uword rowIdx, colIdx;
+
+			for (uword d = 0; d < input_->n_slices; ++d) {
+				uword out_col = 0;
+				for (uword c = 0; c < input_->n_cols; c += stride_) {
+					uword out_row = 0;
+					for (uword r = 0; r < input_->n_rows; r += stride_) {
+						maxVal = input_->slice(d)(span(r, r + kernel_size_.height - 1),
+						                          span(c, c + kernel_size_.height - 1)).max(rowIdx, colIdx);
+						(*receptiveField_)(out_row, out_col, d) = maxVal;
+						connectIndexes_(r + rowIdx, c + colIdx, d) = 1;
+						++out_row;
+					}
+					++out_col;
+				}
+			}
 
 			// currently common to use the activation function after convolution layer
 			// instead of a subsample layer
@@ -56,7 +70,7 @@ namespace cnn
 			} else {
 				if (!output_) {
 					output_ = std::make_shared<Cube<float>>(output_height, output_width,
-															input_->n_slices);
+					                                        input_->n_slices);
 				} else {
 					output_->set_size(output_height, output_width, input_->n_slices);
 				}
@@ -74,7 +88,7 @@ namespace cnn
 			// top layer was 1d. we need reshape error to 3d
 			if (prevLocalLoss->n_slices == 1 && prevLocalLoss->n_cols == 1) {
 				(*prevLocalLoss) = unvectorise(prevLocalLoss->get_ref(), output_->n_rows,
-											   output_->n_cols, output_->n_slices);
+				                               output_->n_cols, output_->n_slices);
 			}
 
 			if (!localLoss_) {
@@ -82,37 +96,38 @@ namespace cnn
 					input_->n_rows, input_->n_cols, input_->n_slices, fill::zeros);
 			} else {
 				localLoss_->set_size(input_->n_rows, input_->n_cols, input_->n_slices);
-				localLoss_->fill(0.0);
+				localLoss_->fill(0.0f);
 			}
-
-			for (uword channel = 0; channel < connectIndexes_.n_slices; ++channel) {
+			uword rowIdx, colIdx;
+			for (uword d = 0; d < input_->n_slices; ++d) {
 				uword lossCol = 0;
-				uword lossRow = 0;
-				for (uword column = 0; column < connectIndexes_.n_cols; column += stride_) {
-					for (uword row = 0; row < connectIndexes_.n_rows; row += stride_) {
+				for (uword c = 0; c < input_->n_cols; c += stride_) {
+					uword lossRow = 0;
+					for (uword r = 0; r < input_->n_rows; r += stride_) {
 						// from top to bottom propagates only connected losses
-						if (connectIndexes_(row, column, channel)) {
-							(*localLoss_)(row, column, channel) = (*prevLocalLoss)(
-								lossRow, lossCol, channel);
-							++lossRow;
-						}
+						connectIndexes_.slice(d)(span(r, r + kernel_size_.height - 1),
+						                         span(c, c + kernel_size_.height - 1)
+						               ).max(rowIdx, colIdx);
+						(*localLoss_)(r + rowIdx, c + colIdx, d) = (*prevLocalLoss)(
+							lossRow, lossCol, d);
+						++lossRow;
 					}
 					++lossCol;
 				}
 			}
 
 			if (activFunc_) {
-				localLoss_->transform([&] (float value)
-				{
+				localLoss_->transform([&] (float value) {
 					if (!value) {
-						return 0.0f;
+						return value;
 					} else
 						return activFunc_->Derivative(value);
 				});
 			}
 
 			// pool layer doesn't has weights
-			return std::make_pair(tensor4d(), tensor4d());
+			return
+					std::make_pair(tensor4d(), tensor4d());
 		}
 
 		std::pair<tensor4d, tensor4d> MaxPoolingLayer::Backward2nd(
@@ -133,30 +148,30 @@ namespace cnn
 					input_->n_rows, input_->n_cols, input_->n_slices, fill::zeros);
 			} else {
 				localLoss_->set_size(input_->n_rows, input_->n_cols, input_->n_slices);
-				localLoss_->fill(0.0);
+				localLoss_->fill(0.0f);
 			}
-
-			for (uword channel = 0; channel < connectIndexes_.n_slices; ++channel) {
+			uword rowIdx, colIdx;
+			for (uword d = 0; d < input_->n_slices; ++d) {
 				uword lossCol = 0;
-				uword lossRow = 0;
-				for (uword column = 0; column < connectIndexes_.n_cols; column += stride_) {
-					for (uword row = 0; row < connectIndexes_.n_rows; row += stride_) {
+				for (uword c = 0; c < input_->n_cols; c += stride_) {
+					uword lossRow = 0;
+					for (uword r = 0; r < input_->n_rows; r += stride_) {
 						// from top to bottom propagates only connected losses
-						if (connectIndexes_(row, column, channel)) {
-							(*localLoss_)(row, column, channel) = (*prevLocalLoss)(
-								lossRow, lossCol, channel);
-							++lossRow;
-						}
+						connectIndexes_.slice(d)(span(r, r + kernel_size_.height - 1),
+												 span(c, c + kernel_size_.height - 1)
+												 ).max(rowIdx, colIdx);
+						(*localLoss_)(r + rowIdx, c + colIdx, d) = (*prevLocalLoss)(
+							lossRow, lossCol, d);
+						++lossRow;
 					}
 					++lossCol;
 				}
 			}
 
 			if (activFunc_) {
-				localLoss_->transform([&](float value)
-				{
+				localLoss_->transform([&](float value) {
 					if (!value) {
-						return 0.0f;
+						return value;
 					} else
 						return std::pow(activFunc_->Derivative(value), 2);
 				});
@@ -165,31 +180,5 @@ namespace cnn
 			// pool layer doesn't has weights
 			return std::make_pair(tensor4d(), tensor4d());
 		}
-
-
-		void MaxPoolingLayer::SubSample(arma::uword output_height,
-										arma::uword output_width) noexcept
-		{
-			using namespace arma;
-			connectIndexes_.set_size(output_height, output_width, input_->n_slices);
-			connectIndexes_.fill(0);
-
-			float maxVal;
-			uword rowIdx, colIdx;
-			for (uword channel = 0; channel < input_->n_slices; ++channel) {
-				// arma store data in column-major order
-				for (uword column = 0; column < input_->n_cols; column += stride_) {
-					for (uword row = 0; row < input_->n_rows; row += stride_) {
-						maxVal = (*input_).slice(channel)(span(row, row + stride_ - 1),
-														  span(column, column + stride_ - 1)
-														  ).max(rowIdx, colIdx);
-						(*receptiveField_).slice(channel)(rowIdx, colIdx) = maxVal;
-						connectIndexes_.slice(channel)(rowIdx, colIdx) = 1;
-					}
-				}
-			}
-		}
-
-
 	}
 }

@@ -25,12 +25,11 @@ namespace cnn
 		public:
 			BasePoolingLayer(kernel_size_t kernel_size,
 			                 std::size_t stride);
-			void Forward(std::shared_ptr<arma::Cube<float>> input) final;
 		protected:
 			// each pooling layer use itself subsample method
 			// you should implement this method for your class
-			virtual void SubSample(arma::uword output_height,
-								   arma::uword output_width) noexcept = 0;
+			//virtual void SubSample(arma::uword output_height,
+			//					   arma::uword output_width) noexcept = 0;
 
 		protected:
 			kernel_size_t kernel_size_;
@@ -38,18 +37,19 @@ namespace cnn
 			std::size_t stride_;
 		};
 
-		class MaxPoolingLayer : public BasePoolingLayer
+		class MaxPoolingLayer final: public BasePoolingLayer
 		{
 		public:
 			MaxPoolingLayer(kernel_size_t kernel_size,
 							 std::size_t stride);
+			void Forward(std::shared_ptr<arma::Cube<float>> input) override;
 			std::pair<tensor4d, tensor4d> Backward(
-				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) final;
-		protected:
-			void SubSample(arma::uword output_height, arma::uword output_width) noexcept override;
-		public:
+				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) override;
 			std::pair<tensor4d, tensor4d> Backward2nd(
 				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) override;
+		protected:
+			//void SubSample(arma::uword output_height, arma::uword output_width) noexcept override;
+
 		private:
 			// when we propagate signals from bottom to top
 			// we're using sliding window and vanishes all signals in its range except max
