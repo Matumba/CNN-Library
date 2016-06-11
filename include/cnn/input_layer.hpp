@@ -28,17 +28,17 @@ namespace cnn
 			bool LoadTestImage();
 			bool LoadTrainImage();
 
-			void SetCustomImage(std::shared_ptr<arma::Cube<float>> image);
+			void SetCustomImage(std::shared_ptr<arma::Cube<double>> image);
 
 			bool is_empty() const noexcept;
-			std::shared_ptr<arma::Cube<float>> Output() const noexcept;
-			const arma::Col<float>& Labels() const noexcept;
+			std::shared_ptr<arma::Cube<double>> Output() const noexcept;
+			const arma::Col<double>& Labels() const noexcept;
 
 			const std::wstring& LabelName(std::size_t id) const;
 
 		private:
-			arma::Col<float> labels_;
-			std::shared_ptr<arma::Cube<float>> output_;
+			arma::Col<double> labels_;
+			std::shared_ptr<arma::Cube<double>> output_;
 			std::unique_ptr<BaseImageLoader> loader_;
 		};
 
@@ -57,7 +57,7 @@ namespace cnn
 		}
 
 		inline void 
-		InputLayer::SetCustomImage(std::shared_ptr<arma::Cube<float>> image)
+		InputLayer::SetCustomImage(std::shared_ptr<arma::Cube<double>> image)
 		{
 			output_ = image;
 			labels_.reset();
@@ -71,12 +71,12 @@ namespace cnn
 			return output_->is_empty();
 		}
 
-		inline std::shared_ptr<arma::Cube<float>> InputLayer::Output() const noexcept
+		inline std::shared_ptr<arma::Cube<double>> InputLayer::Output() const noexcept
 		{
 			return output_;
 		}
 
-		inline const arma::Col<float>& InputLayer::Labels() const noexcept
+		inline const arma::Col<double>& InputLayer::Labels() const noexcept
 		{
 			return labels_;
 		}

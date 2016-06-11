@@ -30,17 +30,17 @@ namespace cnn
 					  std::size_t amount, std::unique_ptr<BaseActivationFunction> activFunc);
 			virtual ~BaseLayer() = default;
 			// propagate signal from bottom to top
-			virtual void Forward(std::shared_ptr<arma::Cube<float>> input) = 0;
+			virtual void Forward(std::shared_ptr<arma::Cube<double>> input) = 0;
 			// propagate error from top to bottom and compute gradient
 			virtual std::pair<tensor4d, tensor4d> Backward(
-				const std::shared_ptr<arma::Cube<float>> &prevLocalLoss) = 0;
+				const std::shared_ptr<arma::Cube<double>> &prevLocalLoss) = 0;
 			// propagate error from top to bottom and compute hessian
 			virtual std::pair<tensor4d, tensor4d> Backward2nd(
-				const std::shared_ptr<arma::Cube<float>> &prevLocalLoss) = 0;
+				const std::shared_ptr<arma::Cube<double>> &prevLocalLoss) = 0;
 			// get propagated local error to for previous layer
-			const std::shared_ptr<arma::Cube<float>>& LocalLoss() const noexcept;
-			std::shared_ptr<arma::Cube<float>> Output() const noexcept;
-			std::shared_ptr<arma::Cube<float>> ReceptiveField() const noexcept;
+			const std::shared_ptr<arma::Cube<double>>& LocalLoss() const noexcept;
+			std::shared_ptr<arma::Cube<double>> Output() const noexcept;
+			std::shared_ptr<arma::Cube<double>> ReceptiveField() const noexcept;
 
 			tensor4d& Weights() noexcept
 			{
@@ -68,13 +68,13 @@ namespace cnn
 			tensor4d biasWeights_;
 
 			// propagated local error to the next layer
-			std::shared_ptr<arma::Cube<float>> localLoss_;
+			std::shared_ptr<arma::Cube<double>> localLoss_;
 			// y = f(v)
-			std::shared_ptr<arma::Cube<float>> output_;
+			std::shared_ptr<arma::Cube<double>> output_;
 			// v = operator(input, weights)
-			std::shared_ptr<arma::Cube<float>> receptiveField_;
+			std::shared_ptr<arma::Cube<double>> receptiveField_;
 			// forwarded signal from previous layer
-			std::shared_ptr<arma::Cube<float>> input_;
+			std::shared_ptr<arma::Cube<double>> input_;
 			// nonlinearity
 			std::unique_ptr<BaseActivationFunction> activFunc_;
 
@@ -99,17 +99,17 @@ namespace cnn
 		{}
 
 
-		inline const std::shared_ptr<arma::Cube<float>>& BaseLayer::LocalLoss() const noexcept
+		inline const std::shared_ptr<arma::Cube<double>>& BaseLayer::LocalLoss() const noexcept
 		{
 			return localLoss_;
 		}
 
-		inline std::shared_ptr<arma::Cube<float>> BaseLayer::Output() const noexcept
+		inline std::shared_ptr<arma::Cube<double>> BaseLayer::Output() const noexcept
 		{
 			return output_;
 		}
 
-		inline std::shared_ptr<arma::Cube<float>> BaseLayer::ReceptiveField() const noexcept
+		inline std::shared_ptr<arma::Cube<double>> BaseLayer::ReceptiveField() const noexcept
 		{
 			return receptiveField_;
 		}
@@ -184,9 +184,9 @@ namespace cnn
 				return;
 
 			for (std::size_t n = 0; n < weights_.n_size; ++n) {
-				weights_.data[n] = arma::randn<arma::Cube<float>>(
+				weights_.data[n] = 0.1 * arma::randn<arma::Cube<double>>(
 					weights_.n_rows, weights_.n_cols, weights_.n_slices);
-				biasWeights_.data[n] = arma::randn<arma::Cube<float>>(
+				biasWeights_.data[n] = 0.1 * arma::randn<arma::Cube<double>>(
 					biasWeights_.n_rows, biasWeights_.n_cols, biasWeights_.n_slices);
 			}
 			initialized_ = true;

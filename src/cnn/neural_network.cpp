@@ -34,12 +34,12 @@ namespace cnn
 		std::vector<std::pair<tensor4d, tensor4d>> NeuralNetwork::Backpropagation()
 		{
 			
-			std::shared_ptr<arma::Cube<float>> hypothesis = layers_.back()->Output();
-			const arma::Col<float> &labels = in_->Labels();
-			std::shared_ptr<arma::Cube<float>> loss = std::make_shared<arma::Cube<float>>(
+			std::shared_ptr<arma::Cube<double>> hypothesis = layers_.back()->Output();
+			const arma::Col<double> &labels = in_->Labels();
+			std::shared_ptr<arma::Cube<double>> loss = std::make_shared<arma::Cube<double>>(
 				labels.n_rows, 1, 1);
 			for (arma::uword i = 0; i < labels.n_rows; ++i) {
-				loss->slice(0)(i, 0) = costFunc_->Derivative(labels(1), hypothesis->slice(0)(i, 0));
+				loss->slice(0)(i, 0) = costFunc_->Derivative(labels(i), hypothesis->slice(0)(i, 0));
 			}
 
 			arma::uword size = layers_.size();
@@ -56,10 +56,14 @@ namespace cnn
 		std::vector<std::pair<tensor4d, tensor4d>> NeuralNetwork::Backpropagation_2nd()
 		{
 			//TODO:
-			std::shared_ptr<arma::Cube<float>> loss = std::make_shared<arma::Cube<float>>(
+			std::shared_ptr<arma::Cube<double>> loss = std::make_shared<arma::Cube<double>>(
 				in_->Labels().n_rows, 1, 1);
-			//second derivative of costfunction = 1
-			loss->fill(1);
+			std::shared_ptr<arma::Cube<double>> hypothesis = layers_.back()->Output();
+			const arma::Col<double> &labels = in_->Labels();
+			for (arma::uword i = 0; i < labels.n_rows; ++i) {
+				loss->slice(0)(i, 0) = costFunc_->SecondDerivative(labels(i),
+																   hypothesis->slice(0)(i, 0));
+			}
 			arma::uword size = layers_.size();
 			std::vector<std::pair<tensor4d, tensor4d>> result(size);
 			result[size - 1] = layers_[size - 1]->Backward2nd(loss);

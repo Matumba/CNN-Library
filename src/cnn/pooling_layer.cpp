@@ -19,7 +19,7 @@ namespace cnn
 {
 	namespace nn
 	{
-		void MaxPoolingLayer::Forward(std::shared_ptr<arma::Cube<float>> input)
+		void MaxPoolingLayer::Forward(std::shared_ptr<arma::Cube<double>> input)
 		{
 			using namespace arma;
 
@@ -36,15 +36,15 @@ namespace cnn
 			output_height = output_height / stride_ + 1;
 			output_width = output_width / stride_ + 1;
 			if (!receptiveField_) {
-				receptiveField_ = std::make_shared<Cube<float>>(output_height, output_width,
+				receptiveField_ = std::make_shared<Cube<double>>(output_height, output_width,
 				                                                input_->n_slices, fill::zeros);
 			} else {
 				receptiveField_->set_size(output_height, output_width, input_->n_slices);
-				receptiveField_->fill(0.0);
+				receptiveField_->zeros();
 			}
 
 			connectIndexes_.set_size(input_->n_rows, input_->n_cols, input_->n_slices);
-			connectIndexes_.fill(0.0);
+			connectIndexes_.zeros();
 			double maxVal;
 			uword rowIdx, colIdx;
 
@@ -69,7 +69,7 @@ namespace cnn
 				output_ = receptiveField_;
 			} else {
 				if (!output_) {
-					output_ = std::make_shared<Cube<float>>(output_height, output_width,
+					output_ = std::make_shared<Cube<double>>(output_height, output_width,
 					                                        input_->n_slices);
 				} else {
 					output_->set_size(output_height, output_width, input_->n_slices);
@@ -79,7 +79,7 @@ namespace cnn
 		}
 
 		std::pair<tensor4d, tensor4d> MaxPoolingLayer::Backward(
-			const std::shared_ptr<arma::Cube<float>>& prevLocalLoss)
+			const std::shared_ptr<arma::Cube<double>>& prevLocalLoss)
 		{
 			using namespace arma;
 #ifndef NDEBUG
@@ -92,11 +92,11 @@ namespace cnn
 			}
 
 			if (!localLoss_) {
-				localLoss_ = std::make_shared<Cube<float>>(
+				localLoss_ = std::make_shared<Cube<double>>(
 					input_->n_rows, input_->n_cols, input_->n_slices, fill::zeros);
 			} else {
 				localLoss_->set_size(input_->n_rows, input_->n_cols, input_->n_slices);
-				localLoss_->fill(0.0f);
+				localLoss_->zeros();
 			}
 			uword rowIdx, colIdx;
 			for (uword d = 0; d < input_->n_slices; ++d) {
@@ -117,7 +117,7 @@ namespace cnn
 			}
 
 			if (activFunc_) {
-				localLoss_->transform([&] (float value) {
+				localLoss_->transform([&] (double value) {
 					if (!value) {
 						return value;
 					} else
@@ -131,7 +131,7 @@ namespace cnn
 		}
 
 		std::pair<tensor4d, tensor4d> MaxPoolingLayer::Backward2nd(
-			const std::shared_ptr<arma::Cube<float>>& prevLocalLoss)
+			const std::shared_ptr<arma::Cube<double>>& prevLocalLoss)
 		{
 			using namespace arma;
 #ifndef NDEBUG
@@ -144,11 +144,11 @@ namespace cnn
 			}
 
 			if (!localLoss_) {
-				localLoss_ = std::make_shared<Cube<float>>(
+				localLoss_ = std::make_shared<Cube<double>>(
 					input_->n_rows, input_->n_cols, input_->n_slices, fill::zeros);
 			} else {
 				localLoss_->set_size(input_->n_rows, input_->n_cols, input_->n_slices);
-				localLoss_->fill(0.0f);
+				localLoss_->zeros();
 			}
 			uword rowIdx, colIdx;
 			for (uword d = 0; d < input_->n_slices; ++d) {
@@ -169,7 +169,7 @@ namespace cnn
 			}
 
 			if (activFunc_) {
-				localLoss_->transform([&](float value) {
+				localLoss_->transform([&](double value) {
 					if (!value) {
 						return value;
 					} else

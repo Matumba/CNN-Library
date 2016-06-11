@@ -28,10 +28,10 @@ namespace cnn
 	{
 	public:
 		virtual ~BaseImageLoader() = default;
-		virtual bool LoadTestImage(std::shared_ptr<arma::Cube<float>>& dst,
-						   arma::Col<float>& labels) = 0;
-		virtual bool LoadTrainImage(std::shared_ptr<arma::Cube<float>>& dst,
-								   arma::Col<float>& labels) = 0;
+		virtual bool LoadTestImage(std::shared_ptr<arma::Cube<double>>& dst,
+						   arma::Col<double>& labels) = 0;
+		virtual bool LoadTrainImage(std::shared_ptr<arma::Cube<double>>& dst,
+								   arma::Col<double>& labels) = 0;
 		virtual const std::wstring& LabelName(std::size_t id) const = 0;
 	};
 
@@ -43,21 +43,22 @@ namespace cnn
 		          const std::wstring& testPath, cv::Size scaleSize);
 
 
-		bool LoadTestImage(std::shared_ptr<arma::Cube<float>>& dst,
-		                   arma::Col<float>& labels) override;
+		bool LoadTestImage(std::shared_ptr<arma::Cube<double>>& dst,
+		                   arma::Col<double>& labels) override;
 
 
-		bool LoadTrainImage(std::shared_ptr<arma::Cube<float>>& dst,
-		                    arma::Col<float>& labels) override;
+		bool LoadTrainImage(std::shared_ptr<arma::Cube<double>>& dst,
+		                    arma::Col<double>& labels) override;
 
 		const std::wstring& LabelName(std::size_t id) const override;
 
 	private:
-		bool loadImage(const std::wstring& folder, std::shared_ptr<arma::Cube<float>>& dst) const;
+		bool loadImage(const std::wstring& folder, std::shared_ptr<arma::Cube<double>>& dst) const;
 
 	private:
 		std::vector<std::pair<std::wstring, arma::uword>> trainDataSet_;
 		std::vector<std::pair<std::wstring, arma::uword>> testDataSet_;
+		std::vector<std::wstring> labels_;
 		std::wstring dataset_dir_;
 		cv::Size scaleSize_;
 	};
@@ -82,11 +83,15 @@ namespace cnn
 		std::size_t folders_amount;
 		in >> folders_amount;
 		trainDataSet_.reserve(folders_amount);
+		labels_.reserve(folders_amount + 1);
+		labels_.emplace_back(L"Unknown");
 
 		std::wstring folder_name;
 		arma::uword image_amount;
-		while (in >> folder_name >> image_amount)
+		while (in >> folder_name >> image_amount) {
 			trainDataSet_.emplace_back(folder_name, image_amount);
+			labels_.emplace_back(folder_name);
+		}
 		in.close();
 		in.open(testPath);
 #ifndef NDEBUG
@@ -101,10 +106,10 @@ namespace cnn
 	inline const std::wstring& LfwLoader::LabelName(std::size_t id) const
 	{
 #ifndef NDEBUG
-		assert(id < trainDataSet_.size());
+		assert(id < labels_.size());
 #endif
 
-		return trainDataSet_[id].first;
+		return labels_[id];
 	}
 
 }

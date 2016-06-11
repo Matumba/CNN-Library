@@ -286,3 +286,4 @@ data/**
 /vc14/CNN_Test.vcxproj.filters
 /vc14/CNN_Test.vcxproj
 vc14/weights.dat
+*.dat

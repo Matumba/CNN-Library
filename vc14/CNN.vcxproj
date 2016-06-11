@@ -30,6 +30,7 @@
     <ClInclude Include="..\include\cnn\input_layer.hpp" />
     <ClInclude Include="..\include\cnn\neural_network.hpp" />
     <ClInclude Include="..\include\cnn\pooling_layer.hpp" />
+    <ClInclude Include="..\include\cnn\softmax_layer.hpp" />
     <ClInclude Include="..\include\cnn\solver.hpp" />
     <ClInclude Include="..\include\cnn\util.hpp" />
   </ItemGroup>
@@ -43,6 +44,7 @@
     <ClCompile Include="..\src\cnn\input_layer.cpp" />
     <ClCompile Include="..\src\cnn\neural_network.cpp" />
     <ClCompile Include="..\src\cnn\pooling_layer.cpp" />
+    <ClCompile Include="..\src\cnn\softmax_layer.cpp" />
     <ClCompile Include="..\src\cnn\Solver.cpp" />
     <ClCompile Include="..\src\cnn\util.cpp" />
   </ItemGroup>

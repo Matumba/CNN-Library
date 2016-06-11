@@ -31,7 +31,7 @@ namespace cnn
 		tensor4d& operator=(const tensor4d &item);
 		tensor4d& operator=(tensor4d &&item);
 
-		std::vector<arma::Cube<float>> data;
+		std::vector<arma::Cube<double>> data;
 		std::size_t n_size;
 		arma::uword n_rows;
 		arma::uword n_cols;
@@ -66,7 +66,7 @@ namespace cnn
 	{
 		data.reserve(n_size);
 		for (std::size_t i = 0; i < n_size; ++i)
-			data.push_back(arma::Cube<float>(n_rows, n_cols, n_slices));
+			data.push_back(arma::Cube<double>(n_rows, n_cols, n_slices));
 	}
 
 	inline tensor4d::tensor4d(const tensor4d& item)
@@ -105,12 +105,12 @@ namespace cnn
 		return *this;
 	}
 
-	arma::Cube<float> vectorise(const arma::Cube<float>& src);
+	arma::Cube<double> vectorise(const arma::Cube<double>& src);
 
-	arma::Cube<float> unvectorise(const arma::Cube<float>& src, arma::uword height,
+	arma::Cube<double> unvectorise(const arma::Cube<double>& src, arma::uword height,
 	                              arma::uword width, arma::uword depth);
 
 	//convert cv mat with 3 channels to arma cube
-	arma::Cube<float> cvMat2armaCube(const cv::Mat& src);
-	cv::Mat armaMat2cvMat(const arma::Mat<float> &src);
+	arma::Cube<double> cvMat2armaCube(const cv::Mat& src);
+	cv::Mat armaMat2cvMat(const arma::Mat<double> &src);
 }

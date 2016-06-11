@@ -30,26 +30,26 @@ namespace cnn
 							   std::unique_ptr<BaseActivationFunction> activFun = std::make_unique<ReLU>());
 			~ConvolutionalLayer() = default;
 
-			void Forward(std::shared_ptr<arma::Cube<float>> input) override;
+			void Forward(std::shared_ptr<arma::Cube<double>> input) override;
 			std::pair<tensor4d, tensor4d> Backward(
-				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) override;
+				const std::shared_ptr<arma::Cube<double>>& prevLocalLoss) override;
 			std::pair<tensor4d, tensor4d> Backward2nd(
-				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) override;
+				const std::shared_ptr<arma::Cube<double>>& prevLocalLoss) override;
 
 		private:
 			// add zero padding on borders
-			void AddPadding(std::shared_ptr<arma::Cube<float>> &src,
+			void AddPadding(std::shared_ptr<arma::Cube<double>> &src,
 							arma::uword n_rows, arma::uword n_cols,
 							arma::uword n_slices) noexcept;
-			void im2col(const std::shared_ptr<arma::Cube<float>> &src_data,
-						const tensor4d& src_kernel, arma::Mat<float> &dst_data,
-						arma::Mat<float> &dst_kernel,
+			void im2col(const std::shared_ptr<arma::Cube<double>> &src_data,
+						const tensor4d& src_kernel, arma::Mat<double> &dst_data,
+						arma::Mat<double> &dst_kernel,
 						arma::uword height, arma::uword width) const noexcept;
 			//im2col version for unsymmetric data. used for computing gradients
-			void im2col(const std::shared_ptr<arma::Cube<float>>& src_data,
-						const std::shared_ptr<arma::Cube <float>>& src_kernel,
-						arma::Mat<float>& dst_data,
-						arma::Mat<float>& dst_kernel,
+			void im2col(const std::shared_ptr<arma::Cube<double>>& src_data,
+						const std::shared_ptr<arma::Cube <double>>& src_kernel,
+						arma::Mat<double>& dst_data,
+						arma::Mat<double>& dst_kernel,
 						arma::uword height, arma::uword width) const noexcept;
 
 		private:
@@ -79,15 +79,15 @@ namespace cnn
 
 		inline
 		// ReSharper disable once CppMemberFunctionMayBeConst
-		void ConvolutionalLayer::AddPadding(std::shared_ptr<arma::Cube<float>>& src,
+		void ConvolutionalLayer::AddPadding(std::shared_ptr<arma::Cube<double>>& src,
 											arma::uword n_rows, arma::uword n_cols,
 											arma::uword n_slices) noexcept
 		{
 			// add zero padding on border
-			src = std::make_shared<arma::Cube<float>>(n_rows + 2 * padding_.height,
+			src = std::make_shared<arma::Cube<double>>(n_rows + 2 * padding_.height,
 													  n_cols + 2 * padding_.width,
 													  n_slices);
-			src->fill(0.0);
+			src->zeros();
 		}
 
 	}

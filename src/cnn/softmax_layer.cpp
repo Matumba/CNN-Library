@@ -11,22 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "fully_connected_layer.hpp"
-#include <cmath>
+#include "softmax_layer.hpp"
 
 namespace cnn
 {
 	namespace nn
 	{
-		void FullyConnectedLayer::Forward(std::shared_ptr<arma::Cube<double>> input)
+		void SoftMaxLayer::Forward(std::shared_ptr<arma::Cube<double>> input)
 		{
 #ifndef NDEBUG
 			assert(initialized_);
 			assert(input->n_elem == weights_.n_rows
-				&& "the input signal is not equal to the expected size");
-			assert(activFunc_);
+				   && "the input signal is not equal to the expected size");
 #endif
-
 			// check is previous layer was fully-connected
 			if (input->n_slices == 1 && input->n_cols == 1) {
 				input_ = input;
@@ -42,31 +39,26 @@ namespace cnn
 			}
 
 			receptiveField_->slice(0).col(0) = weights_.data[0].slice(0).t()
-					* input_->slice(0).col(0);
+				* input_->slice(0).col(0);
 			receptiveField_->slice(0).col(0) += biasWeights_.data[0].slice(0).col(0);
 
 			if (!output_) {
 				output_ = std::make_shared<arma::Cube<double>>(weights_.n_cols, 1, 1);
 			}
-			// MLP has fixed size for data, so we don't need resize data every iteration
-			activFunc_->Compute(receptiveField_, output_);
+			ComputeOutput();
 		}
 
-		std::pair<tensor4d, tensor4d> FullyConnectedLayer::Backward(
+		std::pair<tensor4d, tensor4d> SoftMaxLayer::Backward(
 			const std::shared_ptr<arma::Cube<double>>& prevLocalLoss)
 		{
+			using namespace arma;
 #ifndef NDEBUG
 			assert(prevLocalLoss);
 			assert(prevLocalLoss->n_slices == 1 && prevLocalLoss->n_cols == 1);
 #endif
-			arma::Col<double> dfdz(receptiveField_->n_rows);
-			arma::uword output_height = receptiveField_->n_rows;
-			for (arma::uword i = 0; i < output_height; ++i) {
-				dfdz(i) = activFunc_->Derivative((*receptiveField_)(i, 0, 0));
-			}
+
 			arma::uword input_height = input_->n_rows;
 			//propogate current delta to previous layer:
-			prevLocalLoss->slice(0).col(0) %= dfdz;
 			if (!localLoss_) {
 				localLoss_ = std::make_shared<arma::Cube<double>>(input_height, 1, 1);
 			} else {
@@ -74,6 +66,7 @@ namespace cnn
 			}
 			localLoss_->slice(0) = weights_.data[0].slice(0) * prevLocalLoss->slice(0);
 
+			arma::uword output_height = receptiveField_->n_rows;
 			//compute gradients
 			std::pair<tensor4d, tensor4d> result = std::make_pair(
 				tensor4d(input_height, output_height, 1, 1),
@@ -85,7 +78,7 @@ namespace cnn
 			return result;
 		}
 
-		std::pair<tensor4d, tensor4d> FullyConnectedLayer::Backward2nd(
+		std::pair<tensor4d, tensor4d> SoftMaxLayer::Backward2nd(
 			const std::shared_ptr<arma::Cube<double>>& prevLocalLoss)
 		{
 			using namespace arma;
@@ -93,22 +86,18 @@ namespace cnn
 			assert(prevLocalLoss);
 			assert(prevLocalLoss->n_slices == 1 && prevLocalLoss->n_cols == 1);
 #endif
-			arma::Col<double> dfdz(receptiveField_->n_rows);
-			arma::uword output_height = receptiveField_->n_rows;
-			for (arma::uword i = 0; i < output_height; ++i) {
-				dfdz(i) = std::pow(activFunc_->Derivative((*receptiveField_)(i, 0, 0)), 2);
-			}
 
 			arma::uword input_height = input_->n_rows;
 			//propogate current delta to previous layer:
-			prevLocalLoss->slice(0).col(0) %= dfdz;
 			if (!localLoss_) {
 				localLoss_ = std::make_shared<arma::Cube<double>>(input_height, 1, 1);
 			} else {
 				localLoss_->set_size(input_height, 1, 1);
 			}
-			localLoss_->slice(0) = arma::square(weights_.data[0].slice(0)) * prevLocalLoss->slice(0);
+			localLoss_->slice(0) = arma::square(weights_.data[0].slice(0))
+				* prevLocalLoss->slice(0);
 
+			arma::uword output_height = receptiveField_->n_rows;
 			//compute gradients
 			std::pair<tensor4d, tensor4d> result = std::make_pair(
 				tensor4d(input_height, output_height, 1, 1),

@@ -42,11 +42,11 @@ namespace cnn
 		public:
 			MaxPoolingLayer(kernel_size_t kernel_size,
 							 std::size_t stride);
-			void Forward(std::shared_ptr<arma::Cube<float>> input) override;
+			void Forward(std::shared_ptr<arma::Cube<double>> input) override;
 			std::pair<tensor4d, tensor4d> Backward(
-				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) override;
+				const std::shared_ptr<arma::Cube<double>>& prevLocalLoss) override;
 			std::pair<tensor4d, tensor4d> Backward2nd(
-				const std::shared_ptr<arma::Cube<float>>& prevLocalLoss) override;
+				const std::shared_ptr<arma::Cube<double>>& prevLocalLoss) override;
 		protected:
 			//void SubSample(arma::uword output_height, arma::uword output_width) noexcept override;
 

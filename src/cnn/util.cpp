@@ -16,14 +16,14 @@
 
 namespace cnn
 {
-	arma::Cube<float> vectorise(const arma::Cube<float>& src)
+	arma::Cube<double> vectorise(const arma::Cube<double>& src)
 	{
 		// already reshaped to column
 		//		if (src.n_slices == 1 && src.n_cols == 1)
 		//			return src;
 		using namespace arma;
 
-		Cube<float> dst(src.n_elem, 1, 1);
+		Cube<double> dst(src.n_elem, 1, 1);
 		uword size = 0;
 		for (uword c = 0; c < src.n_slices; ++c) {
 			dst.slice(0)(span(size, size + src.n_elem_slice - 1), 0
@@ -34,7 +34,7 @@ namespace cnn
 		return dst;
 	}
 
-	arma::Cube<float> unvectorise(const arma::Cube<float>& src, arma::uword height,
+	arma::Cube<double> unvectorise(const arma::Cube<double>& src, arma::uword height,
 								  arma::uword width, arma::uword depth)
 	{
 		using namespace arma;
@@ -50,7 +50,7 @@ namespace cnn
 		//			return;
 		//		}
 
-		arma::Cube<float> dst(height, width, depth);
+		arma::Cube<double> dst(height, width, depth);
 		uword size = 0;
 		for (uword c = 0; c < depth; ++c) {
 			for (uword column = 0; column < width; ++column) {
@@ -61,15 +61,15 @@ namespace cnn
 		return dst;
 	}
 
-	arma::Cube<float> cvMat2armaCube(const cv::Mat& src)
+	arma::Cube<double> cvMat2armaCube(const cv::Mat& src)
 	{
 		cv::Mat f_image;
-		src.convertTo(f_image, CV_32FC3);
+		src.convertTo(f_image, CV_64FC3);
 		arma::uword n_channels = 3;
-		std::vector<cv::Mat_<float>> channels;
+		std::vector<cv::Mat_<double>> channels;
 		channels.reserve(n_channels);
 
-		arma::Cube<float> cube(f_image.cols, f_image.rows, n_channels);
+		arma::Cube<double> cube(f_image.cols, f_image.rows, n_channels);
 		for (arma::uword channel = 0; channel < n_channels; ++channel)
 			channels.emplace_back(f_image.rows, f_image.cols, cube.slice(channel).memptr());
 		cv::split(f_image, channels);
@@ -77,9 +77,9 @@ namespace cnn
 		return cube;
 	}
 
-	cv::Mat armaMat2cvMat(const arma::Mat<float> &src)
+	cv::Mat armaMat2cvMat(const arma::Mat<double> &src)
 	{
-		cv::Mat_<float> temp{ int(src.n_cols), int(src.n_rows), const_cast<float*>(src.memptr()) };
+		cv::Mat_<double> temp{ int(src.n_cols), int(src.n_rows), const_cast<double*>(src.memptr()) };
 		cv::Mat dst;
 		temp.convertTo(dst, CV_8UC1);
 		return dst;

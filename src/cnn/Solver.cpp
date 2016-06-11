@@ -30,7 +30,7 @@ namespace cnn
 			std::vector<std::pair<cnn::tensor4d, cnn::tensor4d>> gradient;
 			std::vector<std::pair<cnn::tensor4d, cnn::tensor4d>> iter_gradient;
 			for (uword epoch = 0; epoch < max_epoch_; ++epoch) {
-				float error = 0.0;
+				double error = 0.0;
 				net_->LoadTrainImage();
 				net_->Forward();
 				error += net_->Error();
@@ -76,7 +76,7 @@ namespace cnn
 						for (uword slice = 0; slice < weigths.n_slices; ++slice) {
 							for (uword col = 0; col < weigths.n_cols; ++col) {
 								for (uword row = 0; row < weigths.n_rows; ++row) {
-									weigths.data[item](row, col, slice) += learning_rate_
+									weigths.data[item](row, col, slice) += -learning_rate_
 										* gradient[n].first.data[item](row, col, slice);
 								}
 							}
@@ -87,7 +87,7 @@ namespace cnn
 						for (uword slice = 0; slice < bias_weigths.n_slices; ++slice) {
 							for (uword col = 0; col < bias_weigths.n_cols; ++col) {
 								for (uword row = 0; row < bias_weigths.n_rows; ++row) {
-									bias_weigths.data[item](row, col, slice) += learning_rate_
+									bias_weigths.data[item](row, col, slice) += -learning_rate_
 										* gradient[n].second.data[item](row, col, slice);
 								}
 							}
@@ -97,7 +97,8 @@ namespace cnn
 
 				if (snapshot_interval_ != 0 && (epoch + 1) % snapshot_interval_ == 0) {
 					boost::filesystem::ofstream out;
-					std::wstring path = snapshot_prefix_ + (boost::wformat(L"_%1%") % (epoch + 1)).str();
+					std::wstring path = snapshot_prefix_ + (boost::wformat(L"_%1%.dat") 
+															% (epoch + 1)).str();
 					out.open(path, std::ios::binary);
 					if (!out.is_open()) {
 						std::cout << "cannot save weights to file\n";
@@ -122,7 +123,7 @@ namespace cnn
 			std::vector<std::pair<cnn::tensor4d, cnn::tensor4d>> old_hessian;
 			std::vector<std::pair<cnn::tensor4d, cnn::tensor4d>> iter_hessian;
 			for (uword epoch = 0; epoch < max_epoch_; ++epoch) {
-				float error = 0.0;
+				double error = 0.0;
 				if (test_interval_ != 0 && (epoch + 1) % test_interval_ == 0) {
 					std::cout << boost::format(
 						"compute error on test dataset for %1% samples on %2% training epoches..."
@@ -205,14 +206,14 @@ namespace cnn
 				for (std::size_t n = 0; n < new_hessian.size(); ++n) {
 					cnn::tensor4d& weigths = net_->Weights(n);
 					cnn::tensor4d& bias_weigths = net_->BiasWeights(n);
-					float local_learning_rate;
+					double local_learning_rate;
 					for (uword item = 0; item < weigths.data.size(); ++item) {
 						for (uword slice = 0; slice < weigths.n_slices; ++slice) {
 							for (uword col = 0; col < weigths.n_cols; ++col) {
 								for (uword row = 0; row < weigths.n_rows; ++row) {
 									local_learning_rate = learning_rate_
 											/ (new_hessian[n].first.data[item](row, col, slice) + mu_);
-									weigths.data[item](row, col, slice) += local_learning_rate 
+									weigths.data[item](row, col, slice) += -local_learning_rate 
 											* gradient[n].first.data[item](row, col, slice);
 								}
 							}
@@ -225,7 +226,7 @@ namespace cnn
 								for (uword row = 0; row < bias_weigths.n_rows; ++row) {
 									local_learning_rate = learning_rate_
 											/ (new_hessian[n].second.data[item](row, col, slice) + mu_);
-									bias_weigths.data[item](row, col, slice) += local_learning_rate 
+									bias_weigths.data[item](row, col, slice) += -local_learning_rate 
 											* gradient[n].second.data[item](row, col, slice);
 								}
 							}
@@ -237,7 +238,8 @@ namespace cnn
 
 				if (snapshot_interval_ != 0 && (epoch + 1) % snapshot_interval_ == 0) {
 					boost::filesystem::ofstream out;
-					std::wstring path = snapshot_prefix_ + (boost::wformat(L"_%1%") % (epoch + 1)).str();
+					std::wstring path = snapshot_prefix_ + (boost::wformat(L"_%1%.dat")
+															% (epoch + 1)).str();
 					out.open(path, std::ios::binary);
 					if (!out.is_open()) {
 						std::cout << "cannot save weights to file\n";

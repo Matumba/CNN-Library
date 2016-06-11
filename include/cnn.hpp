@@ -21,6 +21,7 @@
 #include <cnn/activation_function.hpp>
 #include <cnn/cost_function.hpp>
 
+#include <cnn/softmax_layer.hpp>
 #include <cnn/fully_connected_layer.hpp>
 #include <cnn/convolutional_layer.hpp>
 #include <cnn/pooling_layer.hpp>

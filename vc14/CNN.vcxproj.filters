@@ -54,6 +54,9 @@
     <ClInclude Include="..\include\cnn.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\cnn\softmax_layer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\cnn\activation_function.cpp">
@@ -87,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\cnn\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\cnn\softmax_layer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

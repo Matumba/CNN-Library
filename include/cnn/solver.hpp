@@ -25,7 +25,7 @@ namespace cnn
 		public:
 			BaseSolver(std::shared_ptr<nn::NeuralNetwork> network,
 					   arma::uword batch_size,
-					   float learning_rate,
+					   double learning_rate,
 					   arma::uword max_epoch,
 					   arma::uword test_interval,
 					   arma::uword test_size,
@@ -37,7 +37,7 @@ namespace cnn
 			std::shared_ptr<nn::NeuralNetwork> net_;
 			std::wstring snapshot_prefix_;
 
-			float learning_rate_;
+			double learning_rate_;
 			// training batch_size
 			arma::uword batch_size_;
 			// maximum number of iterations
@@ -55,7 +55,7 @@ namespace cnn
 		{
 		public:
 			SgdSolver(std::shared_ptr<nn::NeuralNetwork> network,
-					  arma::uword batch_size, float learning_rate,
+					  arma::uword batch_size, double learning_rate,
 					  arma::uword max_epoch, arma::uword test_interval,
 					  arma::uword test_size, arma::uword snapshot_interval,
 					  std::wstring snapshot_prefix = L"")
@@ -70,9 +70,9 @@ namespace cnn
 		public:
 			SdlmSolver(std::shared_ptr<nn::NeuralNetwork> network,
 					   arma::uword batch_size,
-					   float learning_rate,
-					   float mu,
-					   float gamma,
+					   double learning_rate,
+					   double mu,
+					   double gamma,
 					   arma::uword max_epoch,
 					   arma::uword test_interval,
 					   arma::uword test_size,
@@ -83,14 +83,14 @@ namespace cnn
 			void Solve() override;
 		private:
 			// Levenberg–Marquardt hyperparameters
-			float mu_;
+			double mu_;
 			// smth like momentum for computing diagonal hessian
-			float gamma_;
+			double gamma_;
 		};
 
 		inline 
 		BaseSolver::BaseSolver(std::shared_ptr<nn::NeuralNetwork> network,
-							   arma::uword batch_size, float learning_rate,
+							   arma::uword batch_size, double learning_rate,
 							   arma::uword max_epoch, arma::uword test_interval,
 							   arma::uword test_size, arma::uword snapshot_interval,
 							   std::wstring snapshot_prefix)
@@ -104,8 +104,8 @@ namespace cnn
 
 		inline 
 		SdlmSolver::SdlmSolver(std::shared_ptr<nn::NeuralNetwork> network,
-							   arma::uword batch_size, float learning_rate,
-							   float mu, float gamma, arma::uword max_epoch,
+							   arma::uword batch_size, double learning_rate,
+							   double mu, double gamma, arma::uword max_epoch,
 							   arma::uword test_interval, arma::uword test_size,
 							   arma::uword snaprshot_interval,
 							   std::wstring snapshot_prefix)

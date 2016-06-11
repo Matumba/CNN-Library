@@ -22,8 +22,8 @@
 
 namespace cnn
 {
-	bool LfwLoader::LoadTestImage(std::shared_ptr<arma::Cube<float>>& dst, 
-								  arma::Col<float> &labels)
+	bool LfwLoader::LoadTestImage(std::shared_ptr<arma::Cube<double>>& dst, 
+								  arma::Col<double> &labels)
 	{
 		if (testDataSet_.empty())
 			return false;
@@ -34,11 +34,12 @@ namespace cnn
 		arma::uword id = uid(gen);
 		labels.set_size(trainDataSet_.size());
 		labels.fill(0);
+		labels[0] = 1;
 		return loadImage(testDataSet_[id].first, dst);
 	}
 
-	bool LfwLoader::LoadTrainImage(std::shared_ptr<arma::Cube<float>>& dst, 
-								   arma::Col<float> &labels)
+	bool LfwLoader::LoadTrainImage(std::shared_ptr<arma::Cube<double>>& dst, 
+								   arma::Col<double> &labels)
 	{
 		if (trainDataSet_.empty())
 			return false;
@@ -47,14 +48,14 @@ namespace cnn
 		std::uniform_int_distribution<std::size_t> uid(0, amount - 1);
 
 		arma::uword id = uid(gen);
-		labels.set_size(trainDataSet_.size());
+		labels.set_size(labels_.size());
 		labels.fill(0);
-		labels(id) = 1;
+		labels(id + 1) = 1;
 		return loadImage(trainDataSet_[id].first, dst);
 	}
 
 	bool LfwLoader::loadImage(const std::wstring &folder,
-							  std::shared_ptr<arma::Cube<float>>& dst) const
+							  std::shared_ptr<arma::Cube<double>>& dst) const
 	{
 		namespace fs = boost::filesystem;
 		fs::path dir_path(dataset_dir_ + folder);
@@ -85,11 +86,11 @@ namespace cnn
 		cv::Mat croppedImage = image(ROI);
 		cv::Mat scaleImage;
 		cv::resize(croppedImage, scaleImage, scaleSize_, 0, 0, CV_INTER_LINEAR);
-		dst = std::make_shared<arma::Cube<float>>(cvMat2armaCube(scaleImage));
+		dst = std::make_shared<arma::Cube<double>>(cvMat2armaCube(scaleImage));
 		//feature scaling
-		dst->transform([](float val)
+		dst->transform([](double val)
 		{
-			return val / 255.0f;
+			return val / 255.0;
 		});
 		return true;
 	}

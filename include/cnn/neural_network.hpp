@@ -18,6 +18,7 @@
 #include "input_layer.hpp"
 #include "activation_function.hpp"
 #include "cost_function.hpp"
+#include "softmax_layer.hpp"
 #include "fully_connected_layer.hpp"
 #include "pooling_layer.hpp"
 #include "convolutional_layer.hpp"
@@ -49,12 +50,12 @@ namespace cnn
 
 			bool LoadTestImage();
 			bool LoadTrainImage();
-			void SetInputImage(std::shared_ptr<arma::Cube<float>> image);
+			void SetInputImage(std::shared_ptr<arma::Cube<double>> image);
 
-			std::shared_ptr<arma::Cube<float>> Hypothesis() const noexcept;;
-			std::shared_ptr<arma::Cube<float>> Output(std::size_t layerIdx) const noexcept;
-			std::shared_ptr<arma::Cube<float>> ReceptiveField(std::size_t layerIdx) const noexcept;
-			float Error();
+			std::shared_ptr<arma::Cube<double>> Hypothesis() const noexcept;;
+			std::shared_ptr<arma::Cube<double>> Output(std::size_t layerIdx) const noexcept;
+			std::shared_ptr<arma::Cube<double>> ReceptiveField(std::size_t layerIdx) const noexcept;
+			double Error();
 
 			tensor4d& Weights(std::size_t layerIdx) noexcept
 			{
@@ -64,12 +65,6 @@ namespace cnn
 			{
 				return layers_[layerIdx]->BiasWeights();
 			}
-			//const tensor4d& GetWeights(std::size_t layerIdx) const noexcept;
-			//const tensor4d& GetBiasWeights(std::size_t layerIdx) const noexcept;
-			//void SetWeights(std::size_t layerIdx, const tensor4d& weights);
-			//void SetWeights(std::size_t layerIdx, tensor4d&& weights);
-			//void SetBiasWeights(std::size_t layerIdx, const tensor4d& biasWeights);
-			//void SetBiasWeights(std::size_t layerIdx, tensor4d&& biasWeights);
 
 			//propagate signals from bottom
 			void Forward();
@@ -155,18 +150,18 @@ namespace cnn
 			return in_->LoadTrainImage();
 		}
 
-		inline void NeuralNetwork::SetInputImage(std::shared_ptr<arma::Cube<float>> image)
+		inline void NeuralNetwork::SetInputImage(std::shared_ptr<arma::Cube<double>> image)
 		{
 			in_->SetCustomImage(std::move(image));
 		}
 
-		inline std::shared_ptr<arma::Cube<float>> NeuralNetwork::Hypothesis() const noexcept
+		inline std::shared_ptr<arma::Cube<double>> NeuralNetwork::Hypothesis() const noexcept
 		{
 			return layers_.back()->Output();
 		}
 
 		inline
-		std::shared_ptr<arma::Cube<float>> NeuralNetwork::ReceptiveField(
+		std::shared_ptr<arma::Cube<double>> NeuralNetwork::ReceptiveField(
 			std::size_t layerIdx) const noexcept
 		{
 #ifndef NDEBUG
@@ -177,7 +172,7 @@ namespace cnn
 		}
 
 		inline 
-		std::shared_ptr<arma::Cube<float>> NeuralNetwork::Output(arma::uword layerIdx) const noexcept
+		std::shared_ptr<arma::Cube<double>> NeuralNetwork::Output(arma::uword layerIdx) const noexcept
 		{
 #ifndef NDEBUG
 			assert(layerIdx < layers_.size());
@@ -186,51 +181,19 @@ namespace cnn
 			return layers_[layerIdx]->Output();
 		}
 
-		inline float NeuralNetwork::Error()
+		inline double NeuralNetwork::Error()
 		{
 #ifndef NDEBUG
 			assert(!in_->Labels().empty());
 #endif
-			return costFunc_->Compute(in_->Labels(), layers_.back()->Output()->slice(0).col(0));
+			
+			if (SoftMaxLayer *output = dynamic_cast<SoftMaxLayer*>(layers_.back().get())) {
+				return costFunc_->Compute(in_->Labels(),
+										  layers_.back()->ReceptiveField()->slice(0).col(0));
+			} else {
+				return costFunc_->Compute(in_->Labels(), layers_.back()->Output()->slice(0).col(0));
+			}
 		}
 
-		/*inline 
-		const tensor4d& NeuralNetwork::GetWeights(std::size_t layerIdx) const noexcept
-		{
-#ifndef NDEBUG
-			assert(layerIdx < layers_.size());
-#endif
-			return layers_[layerIdx]->GetWeights();
-		}
-
-		inline 
-		const tensor4d& NeuralNetwork::GetBiasWeights(std::size_t layerIdx) const noexcept
-		{
-			return layers_[layerIdx]->GetBiasWeights();
-		}
-
-		inline 
-		void NeuralNetwork::SetWeights(std::size_t layerIdx, const tensor4d& weights)
-		{
-			return layers_[layerIdx]->SetWeights(weights);
-		}
-
-		inline 
-		void NeuralNetwork::SetWeights(std::size_t layerIdx, tensor4d&& weights)
-		{
-			return layers_[layerIdx]->SetWeights(std::move(weights));
-		}
-
-		inline 
-		void NeuralNetwork::SetBiasWeights(std::size_t layerIdx, const tensor4d& biasWeights)
-		{
-			return layers_[layerIdx]->SetBiasWeights(biasWeights);
-		}
-
-		inline 
-		void NeuralNetwork::SetBiasWeights(std::size_t layerIdx, tensor4d&& biasWeights)
-		{
-			return layers_[layerIdx]->SetBiasWeights(std::move(biasWeights));
-		}*/
 	}
 }

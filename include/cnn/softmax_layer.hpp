@@ -19,25 +19,36 @@ namespace cnn
 {
 	namespace nn
 	{
-		class FullyConnectedLayer : public BaseLayer
+		class SoftMaxLayer : public BaseLayer
 		{
 		public:
-			FullyConnectedLayer(arma::uword in, arma::uword out,
-			                    std::unique_ptr<BaseActivationFunction> activFunc);
-
+			SoftMaxLayer(arma::uword in, arma::uword out);
 			void Forward(std::shared_ptr<arma::Cube<double>> input) override;
 			std::pair<tensor4d, tensor4d> Backward(
 				const std::shared_ptr<arma::Cube<double>>& prevLocalLoss) override;
 			std::pair<tensor4d, tensor4d> Backward2nd(
 				const std::shared_ptr<arma::Cube<double>>& prevLocalLoss) override;
+		private:
+			void ComputeOutput() const;
 		};
 
-		inline
-		FullyConnectedLayer::FullyConnectedLayer(arma::uword in, arma::uword out,
-		                                         std::unique_ptr<BaseActivationFunction> activFunc)
-			: BaseLayer(in, out, 1, 1, std::move(activFunc))
+		inline SoftMaxLayer::SoftMaxLayer(arma::uword in, arma::uword out)
+			: BaseLayer(in, out, 1, 1, nullptr)
 		{
 			biasWeights_ = tensor4d(out, 1, 1, 1);
+		}
+
+		inline void SoftMaxLayer::ComputeOutput() const
+		{
+			double maxVal = receptiveField_->slice(0).col(0).max();
+			double denominator = arma::sum<arma::Col<double>>(
+				arma::exp(receptiveField_->slice(0).col(0) - maxVal));		
+			
+			double numerator;
+			for (arma::uword r = 0; r < receptiveField_->n_rows; ++r) {
+				numerator = std::exp((*receptiveField_)(r, 0, 0) - maxVal);
+				(*output_)(r, 0, 0) = numerator / denominator;
+			}
 		}
 	}
 }
